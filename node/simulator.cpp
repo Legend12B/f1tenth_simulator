@@ -62,8 +62,8 @@ private:
     double width;
 
     // A simulator of the laser
-    ScanSimulator2D scan_simulator;
-    double map_free_threshold;
+    // ScanSimulator2D scan_simulator;
+    // double map_free_threshold;
 
     // For publishing transformations
     tf2_ros::TransformBroadcaster br;
@@ -76,7 +76,7 @@ private:
 
     // Listen for a map
     ros::Subscriber map_sub;
-    bool map_exists = false;
+    //bool map_exists = false;
 
     // Listen for updates to the pose
     ros::Subscriber pose_sub;
@@ -85,7 +85,7 @@ private:
     // Publish a scan, odometry, and imu data
     bool broadcast_transform;
     bool pub_gt_pose;
-    ros::Publisher scan_pub;
+    //ros::Publisher scan_pub;
     ros::Publisher pose_pub;
     ros::Publisher odom_pub;
     ros::Publisher imu_pub;
@@ -105,18 +105,18 @@ private:
     double thresh;
     double speed_clip_diff;
 
-    // precompute cosines of scan angles
+    precompute cosines of scan angles
     std::vector<double> cosines;
 
     // scan parameters
-    double scan_fov;
-    double scan_ang_incr;
+    // double scan_fov;
+    // double scan_ang_incr;
 
     // pi
     const double PI = 3.1415;
 
     // precompute distance from lidar to edge of car for each beam
-    std::vector<double> car_distances;
+    //std::vector<double> car_distances;
 
     // for collision check
     bool TTC = false;
@@ -197,13 +197,13 @@ public:
         n.getParam("obstacle_size", obstacle_size);
 
         // Initialize a simulator of the laser scanner
-        scan_simulator = ScanSimulator2D(
-            scan_beams,
-            scan_fov,
-            scan_std_dev);
+        //scan_simulator = ScanSimulator2D(
+        //    scan_beams,
+        //    scan_fov,
+        //    scan_std_dev);
 
         // Make a publisher for laser scan messages
-        scan_pub = n.advertise<sensor_msgs::LaserScan>(scan_topic, 1);
+        //scan_pub = n.advertise<sensor_msgs::LaserScan>(scan_topic, 1);
 
         // Make a publisher for odometry messages
         odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
@@ -237,11 +237,11 @@ public:
         n.getParam("coll_threshold", thresh);
         n.getParam("ttc_threshold", ttc_threshold);
 
-        scan_ang_incr = scan_simulator.get_angle_increment();
+        //scan_ang_incr = scan_simulator.get_angle_increment();
 
-        cosines = Precompute::get_cosines(scan_beams, -scan_fov/2.0, scan_ang_incr);
-        car_distances = Precompute::get_car_distances(scan_beams, params.wheelbase, width, 
-                scan_distance_to_base_link, -scan_fov/2.0, scan_ang_incr);
+        //cosines = Precompute::get_cosines(scan_beams, -scan_fov/2.0, scan_ang_incr);
+        //car_distances = Precompute::get_car_distances(scan_beams, params.wheelbase, width, 
+        //        scan_distance_to_base_link, -scan_fov/2.0, scan_ang_incr);
 
 
         // steering delay buffer
@@ -347,71 +347,68 @@ public:
 
         /// KEEP in sim
         // If we have a map, perform a scan
-        if (map_exists) {
+        //if (map_exists) {
             // Get the pose of the lidar, given the pose of base link
             // (base link is the center of the rear axle)
-            Pose2D scan_pose;
-            scan_pose.x = state.x + scan_distance_to_base_link * std::cos(state.theta);
-            scan_pose.y = state.y + scan_distance_to_base_link * std::sin(state.theta);
-            scan_pose.theta = state.theta;
+        //    Pose2D scan_pose;
+        //    scan_pose.x = state.x + scan_distance_to_base_link * std::cos(state.theta);
+        //    scan_pose.y = state.y + scan_distance_to_base_link * std::sin(state.theta);
+        //    scan_pose.theta = state.theta;
 
             // Compute the scan from the lidar
-            std::vector<double> scan = scan_simulator.scan(scan_pose);
+         //   std::vector<double> scan = scan_simulator.scan(scan_pose);
 
             // Convert to float
-            std::vector<float> scan_(scan.size());
-            for (size_t i = 0; i < scan.size(); i++)
-                scan_[i] = scan[i];
+        //    std::vector<float> scan_(scan.size());
+        //    for (size_t i = 0; i < scan.size(); i++)
+        //        scan_[i] = scan[i];
 
             // TTC Calculations are done here so the car can be halted in the simulator:
             // to reset TTC
-            bool no_collision = true;
-            if (state.velocity != 0) {
-                for (size_t i = 0; i < scan_.size(); i++) {
+        //    bool no_collision = true;
+        //    if (state.velocity != 0) {
+        //        for (size_t i = 0; i < scan_.size(); i++) {
                     // TTC calculations
 
                     // calculate projected velocity
-                    double proj_velocity = state.velocity * cosines[i];
-                    double ttc = (scan_[i] - car_distances[i]) / proj_velocity;
+        //            double proj_velocity = state.velocity * cosines[i];
+        //            double ttc = (scan_[i] - car_distances[i]) / proj_velocity;
                     // if it's small enough to count as a collision
-                    if ((ttc < ttc_threshold) && (ttc >= 0.0)) { 
-                        if (!TTC) {
-                            first_ttc_actions();
-                        }
+        //            if ((ttc < ttc_threshold) && (ttc >= 0.0)) { 
+        //                if (!TTC) {
+        //                    first_ttc_actions();
+        //                }
 
-                        no_collision = false;
-                        TTC = true;
+       //                no_collision = false;
+        //                TTC = true;
 
-                        ROS_INFO("Collision detected");
-                    }
-                }
-            }
+        //                ROS_INFO("Collision detected");
+        //            }
+        //        }
+        //    }
 
             // reset TTC
-            if (no_collision)
-                TTC = false;
+        //    if (no_collision)
+        //        TTC = false;
 
             // Publish the laser message
-            sensor_msgs::LaserScan scan_msg;
-            scan_msg.header.stamp = timestamp;
-            scan_msg.header.frame_id = scan_frame;
-            scan_msg.angle_min = -scan_simulator.get_field_of_view()/2.;
-            scan_msg.angle_max =  scan_simulator.get_field_of_view()/2.;
-            scan_msg.angle_increment = scan_simulator.get_angle_increment();
-            scan_msg.range_max = 100;
-            scan_msg.ranges = scan_;
-            scan_msg.intensities = scan_;
+        //    sensor_msgs::LaserScan scan_msg;
+        //    scan_msg.header.stamp = timestamp;
+        //    scan_msg.header.frame_id = scan_frame;
+        //    scan_msg.angle_min = -scan_simulator.get_field_of_view()/2.;
+        //    scan_msg.angle_max =  scan_simulator.get_field_of_view()/2.;
+        //    scan_msg.angle_increment = scan_simulator.get_angle_increment();
+        //    scan_msg.range_max = 100;
+        //    scan_msg.ranges = scan_;
+        //    scan_msg.intensities = scan_;
 
-            scan_pub.publish(scan_msg);
+        //    scan_pub.publish(scan_msg);
 
 
             // Publish a transformation between base link and laser
-            pub_laser_link_transform(timestamp);
-
-        }
+        //    pub_laser_link_transform(timestamp);
 
     } // end of update_pose
-
 
         /// ---------------------- GENERAL HELPER FUNCTIONS ----------------------
 
